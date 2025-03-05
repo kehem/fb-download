@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Facebook Video Downloader</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        .input-container { margin-bottom: 20px; }
+        #videoUrl { width: 70%; padding: 8px; margin-right: 10px; }
+        button { padding: 8px 16px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        #result { margin-top: 20px; }
+        .download-links a { display: block; margin: 5px 0; color: #0066cc; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h2>Facebook Video Downloader</h2>
+    <div class="input-container">
+        <input type="text" id="videoUrl" placeholder="Enter Facebook Video URL">
+        <button onclick="downloadVideo()">Get Download Links</button>
+    </div>
+    <div id="result"></div>
+
+    <script>
+        class FacebookVideoScraper {
+            static DEFAULT_HEADERS = {
+                "accept-language": "en-GB,en;q=0.9",
+                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36",
+                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8"
+            };
+
+            static VALID_DOMAINS = ["facebook.com", "fb.watch"];
+
+            static PATTERNS = {
+                sd: [
+                    /"browser_native_sd_url":"(.*?)"/,
+                    /"playable_url":"(.*?)"/,
+                    /sd_src\s*:\s*"([^"]*)"/,
+                    /(?<=src":")[^"]*(https:\/\/[^"]*)/
+                ],
+                hd: [
+                    /"browser_native_hd_url":"(.*?)"/,
+                    /"playable_url_quality_hd":"(.*?)"/,
+                    /hd_src\s*:\s*"([^"]*)"/
+                ],
+                title: /<meta\sname="description"\scontent="(.*?)"/,
+                title_fallback: /<title>(.*?)<\/title>/,
+                thumbnail: /"preferred_thumbnail":{"image":{"uri":"(.*?)"/,
+                duration: /"playable_duration_in_ms":([0-9]+)/
+            };
+
+            static parseString(string) {
+                return string || "";
+            }
+
+            static async getVideoInfo(videoUrl) {
+                console.log("Starting request for:", videoUrl);
+                if (!videoUrl || !videoUrl.trim()) {
+                    throw new Error("Please specify the Facebook URL");
+                }
+                if (!this.VALID_DOMAINS.some(domain => videoUrl.includes(domain))) {
+                    throw new Error("Please enter a valid Facebook URL");
+                }
+
+                try {
+                    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(videoUrl)}`;
+                    console.log("Fetching from:", proxyUrl);
+                    const response = await fetch(proxyUrl, {
+                        headers: this.DEFAULT_HEADERS
+                    }).catch(err => {
+                        console.error("Fetch error:", err);
+                        throw new Error(`Fetch failed: ${err.message}`);
+                    });
+                    console.log("Response received:", response.status);
+                    const json = await response.json();
+                    const data = json.contents;
+
+                    const getMatch = (patterns) => {
+                        for (const pattern of patterns) {
+                            const match = data.match(pattern);
+                            if (match) return match[1];
+                        }
+                        return null;
+                    };
+
+                    const sdUrl = getMatch(this.PATTERNS.sd);
+                    if (!sdUrl) {
+                        throw new Error("Unable to fetch video information at this time");
+                    }
+
+                    const title = getMatch([this.PATTERNS.title]) || 
+                                getMatch([this.PATTERNS.title_fallback]) || "";
+
+                    return {
+                        url: videoUrl,
+                        duration_ms: parseInt(getMatch([this.PATTERNS.duration]) || 0),
+                        sd: this.parseString(sdUrl),
+                        hd: this.parseString(getMatch(this.PATTERNS.hd) || ""),
+                        title: this.parseString(title),
+                        thumbnail: this.parseString(getMatch(this.PATTERNS.thumbnail) || "")
+                    };
+                } catch (err) {
+                    console.error("Error in getVideoInfo:", err);
+                    throw new Error(`Unable to fetch video information: ${err.message}`);
+                }
+            }
+        }
+
+        async function downloadVideo() {
+            try {
+                console.log("Button clicked!");
+                const videoUrl = document.getElementById('videoUrl').value;
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = 'Loading...';
+                const videoInfo = await FacebookVideoScraper.getVideoInfo(videoUrl);
+                
+                resultDiv.innerHTML = `
+                    <h3>${videoInfo.title}</h3>
+                    ${videoInfo.thumbnail ? `<img src="${videoInfo.thumbnail}" alt="thumbnail" style="max-width: 300px;">` : ''}
+                    <p>Duration: ${videoInfo.duration_ms / 1000} seconds</p>
+                    <div class="download-links">
+                        <a href="${videoInfo.sd}" target="_blank" download>Download SD Quality</a>
+                        ${videoInfo.hd ? `<a href="${videoInfo.hd}" target="_blank" download>Download HD Quality</a>` : ''}
+                    </div>
+                `;
+            } catch (error) {
+                console.error("Error in downloadVideo:", error);
+                document.getElementById('result').innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+Metadata-Version: 2.2
+Name: fb-video
+Version: 0.1.3
+Summary: A Facebook video information scraper by Kehem IT
+Home-page: https://github.com/kehem/fb-download
+Author: Kehem IT
+Author-email: support@kehem.com
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+Requires-Dist: requests
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
+
+# Facebook Video Scraper by Kehem IT
+
+A Python package to scrape video information from Facebook.
+
+## Installation
+
+Install the package from PyPI:
+
+```bash
+pip install fb-video
+```
+## Usage
+Run the scraper from the command line:
+
+```bash 
+from fb_video import FacebookVideoScraper
+
+scraper = FacebookVideoScraper()
+info = scraper.get_video_info("https://www.facebook.com/video_url")
+print(info)
+```
+Or use it in Python:
+
+```python
+from facebook_scraper import FacebookVideoScraper
+
+scraper = FacebookVideoScraper()
+info = scraper.get_video_info("https://www.facebook.com/watch/?v=971981951549911")
+print(info.to_dict())
+```

@@ -1,0 +1,2 @@
+[console_scripts]
+fb-scraper = fb_video.fb:main

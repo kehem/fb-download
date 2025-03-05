@@ -1,15 +1,15 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='facebook-scraper',
-    version='0.1.0',
+    name='fb-video',
+    version='0.1.3',
     packages=find_packages(),
     install_requires=[
         'requests',
     ],
     entry_points={
         'console_scripts': [
-            'fb-scraper = facebook_scraper.fb:main',
+            'fb-scraper = fb_video.fb:main',  # Updated to fb_video.fb
         ],
     },
     author='Kehem IT',
@@ -17,7 +17,7 @@ setup(
     description='A Facebook video information scraper by Kehem IT',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
-    url='https://github.com/yourusername/facebook-scraper',  # Optional
+    url='https://github.com/kehem/fb-download',
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',

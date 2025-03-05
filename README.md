@@ -1,43 +1,30 @@
-# Facebook Scraper
+# Facebook Video Scraper by Kehem IT
+
 A Python package to scrape video information from Facebook.
 
 ## Installation
+
+Install the package from PyPI:
+
 ```bash
-pip install facebook-scraper
+pip install fb-video
 ```
 ## Usage
-```bash
-fb-scraper --url "https://www.facebook.com/watch/?v=971981951549911"
+Run the scraper from the command line:
+
+```bash 
+from fb_video import FacebookVideoScraper
+
+scraper = FacebookVideoScraper()
+info = scraper.get_video_info("https://www.facebook.com/video_url")
+print(info)
 ```
+Or use it in Python:
 
-**Build the Package**
-```bash
-# Install build tools if not already installed
-pip install --upgrade pip setuptools wheel
-
-# Navigate to the facebook-scraper directory
-cd facebook-scraper
-
-# Build the package
-python setup.py sdist bdist_wheel
-```
-**Install Locally (Optional)**
-```bash
-# Install twine if not already installed
-pip install twine
-
-# Upload to PyPI (you'll need a PyPI account)
-twine upload dist/*
-```
-## Usage After Installation
-```bash
-# Run directly
-fb-scraper --url "https://www.facebook.com/watch/?v=971981951549911"
-
-# Or use in Python
+```python
 from facebook_scraper import FacebookVideoScraper
+
 scraper = FacebookVideoScraper()
 info = scraper.get_video_info("https://www.facebook.com/watch/?v=971981951549911")
 print(info.to_dict())
 ```
-
