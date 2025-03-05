@@ -38,8 +38,10 @@ class FacebookVideoScraper:
 
     @staticmethod
     def _parse_string(string: str) -> str:
-        """Parse and clean string input"""
-        return string.encode().decode('unicode_escape') if string else ""
+        """Parse and clean string input, removing escape backslashes"""
+        if not string:
+            return ""
+        return string.replace("\\/", "/")  # Replace escaped slashes with normal slashes
 
     @classmethod
     def get_video_info(cls, video_url: str, cookie: Optional[str] = None, 
@@ -61,7 +63,6 @@ class FacebookVideoScraper:
             response.raise_for_status()
             data = response.text
 
-            # Define regex patterns once
             PATTERNS = {
                 'sd': [
                     r'"browser_native_sd_url":"(.*?)"',
@@ -76,13 +77,20 @@ class FacebookVideoScraper:
                 ],
                 'title': r'<meta\sname="description"\scontent="(.*?)"',
                 'title_fallback': r'<title>(.*?)</title>',
-                'thumbnail': r'"preferred_thumbnail":{"image":{"uri":"(.*?)"',
+                'thumbnail': r'"preferred_thumbnail":\{"image":\{"uri":"([^"]*)"',
                 'duration': r'"playable_duration_in_ms":([0-9]+)'
             }
 
-            # Efficient pattern matching
             def get_match(patterns):
-                return next((m.group(1) for p in patterns for m in [re.search(p, data)] if m), None)
+                for p in patterns:
+                    m = re.search(p, data)
+                    if m:
+                        try:
+                            return m.group(1)
+                        except IndexError:
+                            print(f"Pattern '{p}' matched but has no group: {m.group(0)}")
+                            return None
+                return None
 
             sd_url = get_match(PATTERNS['sd'])
             if not sd_url:
@@ -96,7 +104,7 @@ class FacebookVideoScraper:
                 sd=cls._parse_string(sd_url),
                 hd=cls._parse_string(get_match(PATTERNS['hd']) or ""),
                 title=cls._parse_string(title),
-                thumbnail=cls._parse_string(get_match([PATTERNS['thumbnail']]) or "")
+                thumbnail=cls._parse_string(get_match([PATTERNS['thumbnail']]) or "")  # Fixed syntax here
             )
 
         except requests.RequestException as err:
